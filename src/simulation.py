@@ -1,7 +1,5 @@
-import math
-
-from environment import Environment
-from cell import Cell
+from src.environment import Environment
+from src.cell import Cell
 import random
 import logging
 
