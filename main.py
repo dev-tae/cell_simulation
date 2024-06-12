@@ -6,7 +6,7 @@ import random
 import logging
 
 if __name__ == "__main__":
-    steps = 1000
+    steps = 50
     num_cells = 50
     grid_size = 10
     num_simulations = 100
@@ -16,10 +16,11 @@ if __name__ == "__main__":
     for _ in range(num_simulations):
         memory_of_surviving_cells = run_simulation(steps, num_cells, grid_size)
         survival_counts += len(memory_of_surviving_cells)
-        for idx, memory in enumerate(memory_of_surviving_cells):
+        for idx, memory in memory_of_surviving_cells:
             memory_performance[memory] += 1
 
     print(f"Surviving counts: {survival_counts}")
+    print(memory_of_surviving_cells)
 
     for i, memory_perf in enumerate(memory_performance):
         if i != 0:

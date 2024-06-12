@@ -36,7 +36,6 @@ class Environment:
                 self.food += 1
                 logging.debug(f"Added food at [{x}, {y}]")
 
-
     def display(self, cells):
         grid_copy = [row[:] for row in self.grid]
         for cell in cells:

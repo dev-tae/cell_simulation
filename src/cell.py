@@ -10,7 +10,7 @@ logging.basicConfig(
 
 
 class Cell:
-    def __init__(self, name, x, y, energy=10):
+    def __init__(self, name, x, y, energy, cells_position):
         self.id = name
         self.x = x
         self.y = y
@@ -18,22 +18,28 @@ class Cell:
         self.memory = set()
         self.memory_queue = []
         self.memory_capacity = random.randint(1, 20)
+        self.cells_position = cells_position
+        self.cells_position.add((self.x, self.y))
 
     def move(self, grid_size):
-        safe_moves = self.avoid_poison(grid_size)
-        direction = random.choice(safe_moves)
         old_x, old_y = self.x, self.y  # Log the previous position
+        safe_moves = self.avoid_poison()
 
-        if direction == 'up':
-            self.x = (self.x - 1) % grid_size
-        elif direction == 'down':
-            self.x = (self.x + 1) % grid_size
-        elif direction == 'left':
-            self.y = (self.y - 1) % grid_size
-        elif direction == 'right':
-            self.y = (self.y + 1) % grid_size
+        while safe_moves:
+            (dx, dy) = random.choice(safe_moves)
+            new_x, new_y = (self.x + dx) % grid_size, (self.y + dy) % grid_size
 
-        logging.debug(f"Cell {self.id} moved from [{old_x}, {old_y}] to [{self.x}, {self.y}] going {direction}.")
+            if (new_x, new_y) in self.cells_position:
+                safe_moves.remove((dx, dy))
+            else:
+                self.cells_position.remove((old_x, old_y))
+                self.cells_position.add((new_x, new_y))
+                self.x, self.y = new_x, new_y
+                logging.debug(
+                    f"Cell {self.id} moved from ({old_x}, {old_y}) to ({self.x}, {self.y}) going to {(dx, dy)}.")
+                return
+
+        logging.info(f"Cell {self.id} can't move.")
 
     def eat(self, environment):
         logging.debug(f"Cell {self.id} at [{self.x}, {self.y}] with energy {self.energy} is attempting to eat.")
@@ -56,7 +62,7 @@ class Cell:
                 f"Cell {self.id} at [{self.x}, {self.y}] found nothing and lost energy. New energy: {self.energy}.")
 
         if self.energy <= 0:
-            logging.debug(f"Cell {self.id} is dying.")
+            logging.debug(f"Cell {self.id} died.")
 
     def is_alive(self):
         return self.energy > 0
@@ -76,22 +82,15 @@ class Cell:
         self.memory_queue.append((x, y))
         logging.debug(f"New memory at [{x}, {y}] added. Current memory: {self.memory}. Current queue: {self.memory_queue}.")
 
-    def avoid_poison(self, grid_size):
-        possible_moves = ['up', 'down', 'left', 'right']
+    def avoid_poison(self):
+        possible_moves = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         safe_moves = []
 
-        for move in possible_moves:
-            new_x, new_y = self.x, self.y
-            if move == 'up':
-                new_x = (self.x - 1) % grid_size
-            elif move == 'down':
-                new_x = (self.x + 1) % grid_size
-            elif move == 'left':
-                new_y = (self.y - 1) % grid_size
-            elif move == 'right':
-                new_y = (self.y + 1) % grid_size
+        for dx, dy in possible_moves:
+            new_x, new_y = self.x + dx, self.y + dy
 
+            # Avoiding poison
             if (new_x, new_y) not in self.memory:
-                safe_moves.append(move)
+                safe_moves.append((dx, dy))
 
         return safe_moves if safe_moves else possible_moves
